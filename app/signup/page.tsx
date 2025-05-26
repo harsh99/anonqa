@@ -15,7 +15,7 @@ export default function SignupPage() {
     e.preventDefault()
     setError('')
 
-    const { error } = await supabase.auth.signUp({
+    const { error: signupError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -23,12 +23,27 @@ export default function SignupPage() {
       },
     })
 
-    if (error) {
-      setError(error.message)
-    } else {
-      // Optionally show a message or redirect user
-      router.push('/') // adjust as needed
+    if (signupError) {
+      setError(signupError.message)
+      return
     }
+
+    // 🔁 Wait briefly for session to be established
+    let attempts = 0
+    let sessionReady = false
+    while (attempts < 5 && !sessionReady) {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        sessionReady = true
+        break
+      }
+      attempts++
+      await new Promise(res => setTimeout(res, 300))
+    }
+
+    // ✅ Redirect after confirming session is ready
+    router.push('/')
+    router.refresh()
   }
 
   return (
