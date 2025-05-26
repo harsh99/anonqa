@@ -1,59 +1,31 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useFormState } from 'react-dom'
-import { login } from './actions'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function LoginPage() {
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [state, formAction] = useFormState(login, { error: null, pending: false })
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
+  const supabase = createClientComponentClient();
 
-  if (!formAction) return <p>Loading...</p>
+  const handleLogin = async () => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      alert('Login failed: ' + error.message);
+    } else {
+      await router.replace('/');
+      router.refresh(); // Re-fetch server-side session
+    }
+  };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 border rounded shadow">
-      <h1 className="text-2xl font-bold mb-4 text-center">
-        {isSignUp ? 'Create an Account' : 'Log In'}
-      </h1>
-
-      <form action={formAction} method="POST" className="space-y-4">
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
-
-        {state?.error && (
-          <p className="text-red-600 text-sm">{state.error}</p>
-        )}
-
-        <button
-  type="submit"
-  disabled={state.pending}
->
-  {state.pending ? 'Logging in...' : 'Login'}
-</button>
-      </form>
-
-      <p className="mt-4 text-sm text-center">
-        Don’t have an account?{' '}
-        <button
-          type="button"
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="text-blue-600 underline"
-        >
-          Sign up
-        </button>
-      </p>
-    </div>
-  )
+    <>
+      <input type="email" onChange={(e) => setEmail(e.target.value)} />
+      <input type="password" onChange={(e) => setPassword(e.target.value)} />
+      <button onClick={handleLogin}>Log in</button>
+    </>
+  );
 }
