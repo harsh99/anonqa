@@ -26,10 +26,10 @@ export default function AnswerList({ answers, votedAnswerIds = [] }: Props) {
           <div className="mt-2 text-sm text-gray-500 flex items-center gap-4">
             <span>{new Date(answer.created_at).toLocaleString()}</span>
             <UpvoteButton
-              answerId={answer.id}
-              initialCount={answer.votes?.[0]?.count || 0}
-              voted={votedAnswerIds.includes(answer.id)}
-            />
+  		answerId={answer.id}
+  		initialCount={answer.votes_count}
+  		voted={answer.voted}
+	    />
           </div>
         </div>
       ))}

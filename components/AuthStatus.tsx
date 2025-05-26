@@ -43,6 +43,7 @@ export default function AuthStatus() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUserEmail(null);
+    await router.replace('/');
     router.refresh();
   };
 

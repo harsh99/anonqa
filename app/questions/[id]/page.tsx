@@ -53,9 +53,19 @@ export default async function QuestionPage({ params }: Props) {
     )
   }
 
-  const votedAnswerIds = (question.answers || [])
-    .filter(answer => answer.user_votes?.length > 0)
-    .map(answer => answer.id)
+  const currentUserId = session.user.id
+
+const enrichedAnswers = (question.answers || []).map((answer) => {
+  const voted = answer.user_votes?.some(
+    (vote) => vote.user_id === currentUserId
+  )
+  return {
+    ...answer,
+    votes_count: answer.votes?.[0]?.count || 0,
+    voted,
+  }
+})
+
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -64,10 +74,7 @@ export default async function QuestionPage({ params }: Props) {
 
       <section className="mb-10">
         <h2 className="text-xl font-semibold mb-4">Answers</h2>
-        <AnswerList
-          answers={question.answers || []}
-          votedAnswerIds={votedAnswerIds}
-        />
+        <AnswerList answers={enrichedAnswers} />
       </section>
 
       <section>
