@@ -8,12 +8,27 @@ export async function POST(req: Request) {
   const { questionId, content } = body
 
   if (!questionId || !content) {
-    return NextResponse.json({ error: 'Missing questionId or content' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Missing questionId or content' },
+      { status: 400 }
+    )
   }
 
+  // ✅ Get current user
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // ✅ Insert with user_id
   const { error } = await supabase.from('answers').insert({
     question_id: questionId,
     content,
+    user_id: user.id,
     votes: 0, // optional, based on your schema
   })
 

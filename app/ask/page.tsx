@@ -17,7 +17,7 @@ export default function AskPage() {
     if (error) {
       setStatus('❌ Error: ' + error.message)
     } else {
-      setStatus('✅ Question submitted!')
+      setStatus('✅ Question submitted! It will show on your home page.')
       setContent('')
     }
   }

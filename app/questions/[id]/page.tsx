@@ -22,7 +22,9 @@ export default async function QuestionPage({ params }: Props) {
     redirect('/login') // 🔐 Require login
   }
 
-  // ✅ Fetch question + answers
+  const currentUserId = session.user.id
+
+  // ✅ Fetch question + answers with author + reveal info
   const { data: question, error } = await supabase
     .from('questions')
     .select(`
@@ -33,6 +35,8 @@ export default async function QuestionPage({ params }: Props) {
         id,
         content,
         created_at,
+        user_id,
+        reveal_status,
         votes(count),
         user_votes: votes (
           id,
@@ -53,19 +57,17 @@ export default async function QuestionPage({ params }: Props) {
     )
   }
 
-  const currentUserId = session.user.id
-
-const enrichedAnswers = (question.answers || []).map((answer) => {
-  const voted = answer.user_votes?.some(
-    (vote) => vote.user_id === currentUserId
-  )
-  return {
-    ...answer,
-    votes_count: answer.votes?.[0]?.count || 0,
-    voted,
-  }
-})
-
+  // ✅ Enrich answers with vote count and whether user voted
+  const enrichedAnswers = (question.answers || []).map((answer) => {
+    const voted = answer.user_votes?.some(
+      (vote) => vote.user_id === currentUserId
+    )
+    return {
+      ...answer,
+      votes_count: answer.votes?.[0]?.count || 0,
+      voted,
+    }
+  })
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -74,7 +76,10 @@ const enrichedAnswers = (question.answers || []).map((answer) => {
 
       <section className="mb-10">
         <h2 className="text-xl font-semibold mb-4">Answers</h2>
-        <AnswerList answers={enrichedAnswers} />
+        <AnswerList
+          answers={enrichedAnswers}
+          currentUserId={currentUserId} // ✅ Pass this in
+        />
       </section>
 
       <section>
