@@ -57,15 +57,33 @@ export default async function QuestionPage({ params }: Props) {
     )
   }
 
-  // ✅ Enrich answers with vote count and whether user voted
+  // ✅ Fetch reveal requests made by current user for this question's answers
+  const answerIds = question.answers?.map((a) => a.id) || []
+  let requestedAnswerIds: string[] = []
+
+  if (answerIds.length > 0) {
+    const { data: revealRequests, error: revealError } = await supabase
+      .from('reveal_requests')
+      .select('answer_id')
+      .in('answer_id', answerIds)
+      .eq('requested_by', currentUserId)
+
+    if (!revealError && revealRequests) {
+      requestedAnswerIds = revealRequests.map((r) => r.answer_id)
+    }
+  }
+
+  // ✅ Enrich answers
   const enrichedAnswers = (question.answers || []).map((answer) => {
     const voted = answer.user_votes?.some(
       (vote) => vote.user_id === currentUserId
     )
+    const reveal_requested = requestedAnswerIds.includes(answer.id)
     return {
       ...answer,
       votes_count: answer.votes?.[0]?.count || 0,
       voted,
+      reveal_requested,
     }
   })
 
@@ -78,7 +96,7 @@ export default async function QuestionPage({ params }: Props) {
         <h2 className="text-xl font-semibold mb-4">Answers</h2>
         <AnswerList
           answers={enrichedAnswers}
-          currentUserId={currentUserId} // ✅ Pass this in
+          currentUserId={currentUserId} // ✅ Required for reveal button
         />
       </section>
 

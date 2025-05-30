@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 interface Props {
@@ -8,41 +8,22 @@ interface Props {
   currentUserId: string
   authorId: string
   revealStatus: boolean
+  alreadyRequested: boolean
 }
 
 export function RequestRevealButton({
   answerId,
   currentUserId,
   authorId,
-  revealStatus
+  revealStatus,
+  alreadyRequested
 }: Props) {
   const supabase = createClientComponentClient()
-  const [alreadyRequested, setAlreadyRequested] = useState(false)
-  const [requested, setRequested] = useState(false)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function checkIfAlreadyRequested() {
-      const { data, error } = await supabase
-        .from('reveal_requests')
-        .select('id')
-        .eq('answer_id', answerId)
-        .eq('requested_by', currentUserId)
-        .single()
-
-      if (data) setAlreadyRequested(true)
-      setLoading(false)
-    }
-
-    if (currentUserId && !revealStatus) {
-      checkIfAlreadyRequested()
-    }
-  }, [answerId, currentUserId, revealStatus, supabase])
+  const [requested, setRequested] = useState(alreadyRequested)
 
   async function handleRequestReveal() {
-    setRequested(true)
+    if (requested) return
 
-    // Step 1: Insert into reveal_requests
     const { error: requestError } = await supabase
       .from('reveal_requests')
       .insert({
@@ -55,7 +36,6 @@ export function RequestRevealButton({
       return
     }
 
-    // Step 2: Insert notification for author
     const { error: notifyError } = await supabase
       .from('notifications')
       .insert({
@@ -67,24 +47,24 @@ export function RequestRevealButton({
     if (notifyError) {
       console.error('Failed to create notification:', notifyError.message)
     }
+
+    setRequested(true)
   }
 
-  if (
-    loading ||
-    revealStatus ||
-    currentUserId === authorId ||
-    alreadyRequested
-  ) {
+  const shouldShowButton =
+    !revealStatus && currentUserId !== authorId
+
+  if (!shouldShowButton) {
     return null
   }
 
   return (
     <button
       onClick={handleRequestReveal}
-      disabled={requested}
-      className="mt-2 text-sm text-blue-600 underline"
+      disabled={requested || alreadyRequested}
+      className="mt-2 text-sm text-blue-600 underline disabled:text-gray-400"
     >
-      {requested ? 'Reveal Requested' : 'Request Reveal'}
+      {(requested || alreadyRequested) ? 'Reveal Requested' : 'Request Reveal'}
     </button>
   )
 }
