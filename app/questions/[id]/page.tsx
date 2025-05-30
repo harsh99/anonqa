@@ -42,7 +42,8 @@ export default async function QuestionPage({ params }: Props) {
           id,
           user_id,
           ip_address
-        )
+        ),
+        reveal_requests(count)
       )
     `)
     .eq('id', questionId)
@@ -84,6 +85,7 @@ export default async function QuestionPage({ params }: Props) {
       votes_count: answer.votes?.[0]?.count || 0,
       voted,
       reveal_requested,
+      reveal_requests_count: answer.reveal_requests?.[0]?.count || 0,
     }
   })
 

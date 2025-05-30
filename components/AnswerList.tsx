@@ -12,6 +12,7 @@ interface Answer {
   votes_count: number
   voted: boolean
   reveal_requested?: boolean // ✅ added
+  reveal_requests_count?: number
 }
 
 interface Props {
@@ -46,14 +47,14 @@ export default function AnswerList({ answers, votedAnswerIds = [], currentUserId
 
           {/* 👇 Request Reveal Button for top-voted, anonymous answers */}
           {answer.id === topVotedAnswerId && !answer.reveal_status && (
-            <RequestRevealButton
-              answerId={answer.id}
-              currentUserId={currentUserId}
-              authorId={answer.user_id}
-              revealStatus={answer.reveal_status}
-              alreadyRequested={answer.reveal_requested ?? false} // ✅ pass it in
-            />
-          )}
+  <RequestRevealButton
+    answerId={answer.id}
+    currentUserId={currentUserId}
+    authorId={answer.user_id}
+    revealStatus={answer.reveal_status}
+    alreadyRequested={answer.reveal_requested ?? false} // ✅ pass it in
+  />
+)}
         </div>
       ))}
     </div>

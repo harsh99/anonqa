@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 interface Props {
@@ -20,6 +20,24 @@ export function RequestRevealButton({
 }: Props) {
   const supabase = createClientComponentClient()
   const [requested, setRequested] = useState(alreadyRequested)
+  const [requestCount, setRequestCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    async function fetchRevealRequestCount() {
+      const { count, error } = await supabase
+        .from('reveal_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('answer_id', answerId)
+
+      if (!error) {
+        setRequestCount(count ?? 0)
+      }
+    }
+
+    if (!revealStatus && currentUserId !== authorId) {
+      fetchRevealRequestCount()
+    }
+  }, [supabase, answerId, revealStatus, currentUserId, authorId])
 
   async function handleRequestReveal() {
     if (requested) return
@@ -49,6 +67,7 @@ export function RequestRevealButton({
     }
 
     setRequested(true)
+    setRequestCount((prev) => (prev !== null ? prev + 1 : 1))
   }
 
   const shouldShowButton =
@@ -58,13 +77,21 @@ export function RequestRevealButton({
     return null
   }
 
+  // Only show count if total reveal requests > 1
+  const showCount = requestCount !== null && requestCount > 1
+
+  const buttonText =
+    (requested || alreadyRequested)
+      ? `Reveal Requested${showCount ? ` | Total ${requestCount}` : ''}`
+      : 'Request Reveal'
+
   return (
     <button
       onClick={handleRequestReveal}
       disabled={requested || alreadyRequested}
       className="mt-2 text-sm text-blue-600 underline disabled:text-gray-400"
     >
-      {(requested || alreadyRequested) ? 'Reveal Requested' : 'Request Reveal'}
+      {buttonText}
     </button>
   )
 }
