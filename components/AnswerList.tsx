@@ -12,7 +12,7 @@ interface Answer {
   votes_count: number
   voted: boolean
   reveal_requested?: boolean // ✅ added
-  reveal_requests_count?: number
+  reveal_request_count?: number
 }
 
 interface Props {
@@ -53,6 +53,7 @@ export default function AnswerList({ answers, votedAnswerIds = [], currentUserId
     authorId={answer.user_id}
     revealStatus={answer.reveal_status}
     alreadyRequested={answer.reveal_requested ?? false} // ✅ pass it in
+    totalRequests={answer.reveal_request_count ?? 0}
   />
 )}
         </div>

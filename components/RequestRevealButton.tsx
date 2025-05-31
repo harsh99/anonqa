@@ -9,6 +9,7 @@ interface Props {
   authorId: string
   revealStatus: boolean
   alreadyRequested: boolean
+  totalRequests: number // receiving from server
 }
 
 export function RequestRevealButton({
@@ -16,28 +17,27 @@ export function RequestRevealButton({
   currentUserId,
   authorId,
   revealStatus,
-  alreadyRequested
+  alreadyRequested,
+  totalRequests
 }: Props) {
+
+   console.log({
+    answerId,
+    currentUserId,
+    authorId,
+    revealStatus,
+    alreadyRequested,
+    totalRequests
+  })
+
   const supabase = createClientComponentClient()
   const [requested, setRequested] = useState(alreadyRequested)
-  const [requestCount, setRequestCount] = useState<number | null>(null)
+  const [requestCount, setRequestCount] = useState<number>(totalRequests)
 
   useEffect(() => {
-    async function fetchRevealRequestCount() {
-      const { count, error } = await supabase
-        .from('reveal_requests')
-        .select('*', { count: 'exact', head: true })
-        .eq('answer_id', answerId)
-
-      if (!error) {
-        setRequestCount(count ?? 0)
-      }
-    }
-
-    if (!revealStatus && currentUserId !== authorId) {
-      fetchRevealRequestCount()
-    }
-  }, [supabase, answerId, revealStatus, currentUserId, authorId])
+    // Update local count if props change
+    setRequestCount(totalRequests)
+  }, [totalRequests])
 
   async function handleRequestReveal() {
     if (requested) return
@@ -67,23 +67,19 @@ export function RequestRevealButton({
     }
 
     setRequested(true)
-    setRequestCount((prev) => (prev !== null ? prev + 1 : 1))
+    setRequestCount((prev) => prev + 1)
   }
 
-  const shouldShowButton =
-    !revealStatus && currentUserId !== authorId
+  const shouldShowButton = !revealStatus && currentUserId !== authorId
 
   if (!shouldShowButton) {
     return null
   }
 
-  // Only show count if total reveal requests > 1
-  const showCount = requestCount !== null && requestCount > 1
-
-  const buttonText =
-    (requested || alreadyRequested)
-      ? `Reveal Requested${showCount ? ` | Total ${requestCount}` : ''}`
-      : 'Request Reveal'
+  const showCount = requestCount !== null && requestCount > 0
+  const buttonText = (requested || alreadyRequested)
+    ? `Reveal Requested${showCount ? ` | Total ${requestCount}` : ''}`
+    : 'Request Reveal'
 
   return (
     <button
@@ -94,4 +90,5 @@ export function RequestRevealButton({
       {buttonText}
     </button>
   )
+  
 }

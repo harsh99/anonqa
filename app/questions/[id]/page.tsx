@@ -13,18 +13,14 @@ export default async function QuestionPage({ params }: Props) {
   const questionId = params?.id
   const supabase = createClient()
 
-  // ✅ Check if user is logged in
+  // ✅ Check user session
   const {
     data: { session },
   } = await supabase.auth.getSession()
-
-  if (!session) {
-    redirect('/login') // 🔐 Require login
-  }
-
+  if (!session) redirect('/login')
   const currentUserId = session.user.id
 
-  // ✅ Fetch question + answers with author + reveal info
+  // ✅ Fetch question + answers with vote counts
   const { data: question, error } = await supabase
     .from('questions')
     .select(`
@@ -39,11 +35,8 @@ export default async function QuestionPage({ params }: Props) {
         reveal_status,
         votes(count),
         user_votes: votes (
-          id,
-          user_id,
-          ip_address
-        ),
-        reveal_requests(count)
+          user_id
+        )
       )
     `)
     .eq('id', questionId)
@@ -51,41 +44,59 @@ export default async function QuestionPage({ params }: Props) {
 
   if (error || !question) {
     console.error('Error loading question:', error)
-    return (
-      <div className="p-4 text-red-600">
-        Question not found or error loading.
-      </div>
-    )
+    return <div className="p-4 text-red-600">Question not found or error loading.</div>
   }
 
-  // ✅ Fetch reveal requests made by current user for this question's answers
-  const answerIds = question.answers?.map((a) => a.id) || []
-  let requestedAnswerIds: string[] = []
+  // ✅ Find top-voted answer
+  const answers = question.answers || []
+  const topAnswer = answers
+    .map((a) => ({
+      ...a,
+      votes_count: a.votes?.[0]?.count || 0,
+    }))
+    .sort((a, b) => b.votes_count - a.votes_count)[0]
 
-  if (answerIds.length > 0) {
-    const { data: revealRequests, error: revealError } = await supabase
-      .from('reveal_requests')
-      .select('answer_id')
-      .in('answer_id', answerIds)
-      .eq('requested_by', currentUserId)
+  let reveal_requested = false
+  let reveal_request_count = 0
 
-    if (!revealError && revealRequests) {
-      requestedAnswerIds = revealRequests.map((r) => r.answer_id)
-    }
+  if (topAnswer) {
+  const { data: countsData, error: countsError } = await supabase
+    .from('reveal_request_counts_view')
+    .select('answer_id, request_count')
+    .eq('answer_id', topAnswer.id);
+
+  console.log('Reveal request counts from view:', countsData, 'Error:', countsError);
+ 
+    
+  if (countsError) {
+    console.error('View query error:', countsError.message);
+  } else if (countsData && countsData.length > 0) {
+    reveal_request_count = Number(countsData[0].request_count);
   }
 
-  // ✅ Enrich answers
-  const enrichedAnswers = (question.answers || []).map((answer) => {
-    const voted = answer.user_votes?.some(
-      (vote) => vote.user_id === currentUserId
-    )
-    const reveal_requested = requestedAnswerIds.includes(answer.id)
+  // Check if current user requested reveal for this answer (unchanged)
+  const { data: userRequests, error: userReqError } = await supabase
+    .from('reveal_requests')
+    .select('id')
+    .eq('requested_by', currentUserId)
+    .eq('answer_id', topAnswer.id)
+    .maybeSingle();
+
+  reveal_requested = !!userRequests;
+}
+
+
+  // ✅ Enrich answers with reveal info only for top one
+  const enrichedAnswers = answers.map((answer) => {
+    const voted = answer.user_votes?.some((v) => v.user_id === currentUserId)
+    const isTop = topAnswer && answer.id === topAnswer.id
+
     return {
       ...answer,
       votes_count: answer.votes?.[0]?.count || 0,
       voted,
-      reveal_requested,
-      reveal_requests_count: answer.reveal_requests?.[0]?.count || 0,
+      reveal_requested: isTop ? reveal_requested : false,
+      reveal_request_count: isTop ? reveal_request_count : 0,
     }
   })
 
@@ -98,7 +109,7 @@ export default async function QuestionPage({ params }: Props) {
         <h2 className="text-xl font-semibold mb-4">Answers</h2>
         <AnswerList
           answers={enrichedAnswers}
-          currentUserId={currentUserId} // ✅ Required for reveal button
+          currentUserId={currentUserId}
         />
       </section>
 
