@@ -24,9 +24,9 @@ export default async function HomePage() {
 
   return (
     <main className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Top Questions</h1>
+      <h1 className="text-2xl font-bold mb-4">Trending Questions</h1>
       {questions.map((q) => (
-        <div key={q.question_id} className="mb-6 border-b pb-4">
+        <div key={q.question_id} className="mb-6 pb-4">
           <h2 className="text-xl font-semibold">{q.question_content}</h2>
           <p className="text-gray-700 mt-2">
             {q.top_answer_content || 'No answers yet.'}

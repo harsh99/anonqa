@@ -50,7 +50,7 @@ export default function AuthStatus() {
   if (loading) return null;
 
   return (
-    <div className="text-sm text-gray-600 text-right">
+    <div className="text-sm text-gray-600 flex items-center">
       {userEmail ? (
         <span>
           ✅ Logged in as <strong>{userEmail}</strong>{' '}
