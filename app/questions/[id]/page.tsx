@@ -19,7 +19,7 @@ export default async function QuestionPage({ params }: Props) {
   if (!session) redirect('/login')
   const currentUserId = session.user.id
 
-  // ✅ Fetch question + answers, including author name
+  // Fetch question + answers, including author name with alias 'user'
   const { data: question, error } = await supabase
     .from('questions')
     .select(`
@@ -37,7 +37,7 @@ export default async function QuestionPage({ params }: Props) {
         user_votes: votes (
           user_id
         ),
-        users:users (
+        user:users (
           username
         )
       )
@@ -50,7 +50,10 @@ export default async function QuestionPage({ params }: Props) {
     return <div className="p-4 text-red-600">Question not found or error loading.</div>
   }
 
-  // ✅ Find top-voted answer
+  // Log answers for debugging user data
+  console.log('Fetched answers with user data:', question.answers)
+
+  // Find top-voted answer
   const answers = question.answers || []
   const topAnswer = answers
     .map((a) => ({
@@ -76,8 +79,6 @@ export default async function QuestionPage({ params }: Props) {
       reveal_request_count = Number(countsData[0].request_count)
     }
 
-
-    // Check if current user requested reveal for this answer (unchanged)
     const { data: userRequests, error: userReqError } = await supabase
       .from('reveal_requests')
       .select('id')
@@ -88,7 +89,7 @@ export default async function QuestionPage({ params }: Props) {
     reveal_requested = !!userRequests
   }
 
-  // ✅ Enrich answers with reveal data and author name
+  // Enrich answers with reveal data and author name using `user` alias
   const enrichedAnswers = answers.map((answer) => {
     const voted = answer.user_votes?.some((v) => v.user_id === currentUserId)
     const isTop = topAnswer && answer.id === topAnswer.id
@@ -98,7 +99,7 @@ export default async function QuestionPage({ params }: Props) {
       voted,
       reveal_requested: isTop ? reveal_requested : false,
       reveal_request_count: isTop ? reveal_request_count : 0,
-      author_name: answer.users?.username ?? null, // 👈 NEW
+      author_name: answer.user?.username ?? null, // changed to `user`
     }
   })
 
