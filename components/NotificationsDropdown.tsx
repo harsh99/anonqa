@@ -184,7 +184,7 @@ export default function NotificationsDropdown() {
       <button
         aria-label="Notifications"
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="relative text-gray-600 hover:text-gray-900 focus:outline-none ml-4 flex-shrink-0 w-10 h-10 flex items-center justify-center"
+        className="relative text-gray-300 hover:text-yellow-400 focus:outline-none ml-4 flex-shrink-0 w-10 h-10 flex items-center justify-center"
       >
         <FaBell size={20} />
         {unreadCount > 0 && (

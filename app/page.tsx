@@ -16,6 +16,7 @@ export default async function HomePage() {
   const { data: questions, error } = await supabase
     .from('questions_with_top_answer')
     .select('*')
+    .order('question_created_at', { ascending: false })
 
   if (error) {
     console.error('❌ Error loading questions:', error)
@@ -26,11 +27,20 @@ export default async function HomePage() {
     <main className="p-6">
       <h1 className="text-2xl font-bold mb-4">Trending Questions</h1>
       {questions.map((q) => (
-        <div key={q.question_id} className="mb-6 pb-4">
+        <div key={q.question_id} className="mb-6 pb-4 border-b">
           <h2 className="text-xl font-semibold">{q.question_content}</h2>
-          <p className="text-gray-700 mt-2">
-            {q.top_answer_content || 'No answers yet.'}
-          </p>
+
+          {q.top_answer_content ? (
+            <p className="text-gray-800 mt-2 text-base">
+              "{q.top_answer_content}"
+            </p>
+          ) : (
+            <div className="mt-2">
+              <span className="p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 italic text-sm inline-block max-w-xs">
+                🚫 No answers yet. Be the first one to answer!
+              </span>
+            </div>
+          )}
 
           {session ? (
             <Link href={`/questions/${q.question_id}`}>

@@ -42,7 +42,7 @@ export default function SignupPage() {
     }
 
     // ✅ Redirect after confirming session is ready
-    router.push('/')
+    router.push('/home')
     router.refresh()
   }
 
