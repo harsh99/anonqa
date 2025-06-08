@@ -22,6 +22,7 @@ function formatRelativeOrExactTime(utcString: string): string {
 
   if (diffSec < 60) return `${diffSec} seconds ago`
   if (diffMin < 60) return `${diffMin} minutes ago`
+  if (diffHr == 1) return `${diffHr} hour ago`
   if (diffHr < 24) return `${diffHr} hours ago`
   return utcDate.toLocaleString()
 }
@@ -74,7 +75,12 @@ export default function HomeFeed() {
             <li key={q.question_id}>
               <Link href={`/questions/${q.question_id}`}>
                 <div className="p-4 border rounded-xl shadow bg-rose-50 hover:bg-teal-100 transition cursor-pointer">
-                  <h2 className="text-lg font-medium">{q.question_content}</h2>
+                  <p className="text-lg font-medium">
+                    {q.question_content}
+                    <span className="ml-2 text-xs text-gray-500 italic">
+                      • {formatRelativeOrExactTime(q.question_created_at)}
+                    </span>
+                  </p>
 
                   {q.top_answer_content ? (
                     <div className="text-sm text-gray-700 mt-2 italic">

@@ -3,6 +3,29 @@ import { redirect } from 'next/navigation'
 import AnswerForm from '@/components/AnswerForm'
 import AnswerList from '@/components/AnswerList'
 
+function formatRelativeOrExactTime(utcString: string): string {
+  if (!utcString) return 'just now'
+  const utcDate = new Date(utcString.endsWith('Z') ? utcString : utcString + 'Z')
+  if (isNaN(utcDate.getTime())) return 'just now'
+  const now = new Date()
+  const diffMs = now.getTime() - utcDate.getTime()
+  const diffSec = Math.floor(diffMs / 1000)
+  const diffMin = Math.floor(diffSec / 60)
+  const diffHr = Math.floor(diffMin / 60)
+
+  if (diffSec < 60) return `${diffSec} seconds ago`
+  if (diffMin < 60) return `${diffMin} minutes ago`
+  if (diffHr == 1) return `${diffHr} hour ago`
+  if (diffHr < 24) return `${diffHr} hours ago`
+  return utcDate.toLocaleString()
+}
+
+function formatAnswerCount(count: number) {
+  if (count === 1) return '1 answer'
+  if (count > 100) return '100+ answers'
+  return `${count} answers`
+}
+
 interface Props {
   params: {
     id: string
@@ -64,6 +87,9 @@ export default async function QuestionPage({ params }: Props) {
 
   let reveal_requested = false
   let reveal_request_count = 0
+  
+  //Counting total no of answers
+  const totalAnswers = question.answers?.length || 0
 
   if (topAnswer) {
     const { data: countsData, error: countsError } = await supabase
@@ -105,16 +131,27 @@ export default async function QuestionPage({ params }: Props) {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-2">Question</h1>
-      <p className="text-gray-700 mb-6">{question.content}</p>
+      <h2 className="text-2xl font-bold mb-2">Question</h2>
+      <p className="text-lg font-medium mb-4">
+        {question.content}
+          <span className="ml-2 text-xs text-gray-500 italic ">
+             • {formatRelativeOrExactTime(question.created_at)}
+          </span>
+      </p>
 
       <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Answers</h2>
+        <div className="flex items-baseline mb-4">
+          <h2 className="text-xl font-semibold">Answers</h2>
+          <span className="ml-2 text-sm text-gray-600">
+            {formatAnswerCount(totalAnswers)}
+          </span>
+        </div>
         <AnswerList
           answers={enrichedAnswers}
           currentUserId={currentUserId}
         />
       </section>
+
 
       <section>
         <h2 className="text-xl font-semibold mb-2">Your Answer</h2>
