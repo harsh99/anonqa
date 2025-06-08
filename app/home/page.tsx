@@ -66,7 +66,7 @@ export default function HomeFeed() {
 
   return (
     <main className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">💡 My Feed 💡</h1>
+      <h1 className="text-2xl font-bold mb-4">My Feed</h1>
       {questions.length === 0 ? (
         <p className="text-gray-500">No questions yet.</p>
       ) : (

@@ -123,25 +123,44 @@ export default function AnswerList({ answers: initialAnswers, votedAnswerIds = [
 
   const handleRevealIdentity = async (answerId: string) => {
     const now = new Date().toISOString()
-    const { error } = await supabase
+
+    // 1. Update answers table
+    const { error: answerError } = await supabase
       .from('answers')
       .update({ reveal_status: true, revealed_at: now })
       .eq('id', answerId)
 
-    if (!error) {
-      const { data: profile } = await supabase.auth.getUser()
-      const authorName = profile?.user?.email || 'Author'
-      setAnswers(prev =>
-        prev.map(answer =>
-          answer.id === answerId
-            ? { ...answer, reveal_status: true, revealed_at: now, author_name: authorName }
-            : answer
-        )
-      )
-    } else {
-      console.error('Failed to reveal identity:', error.message)
+    if (answerError) {
+      console.error('Failed to reveal identity in answers:', answerError.message)
+      return
     }
+
+    // 2. Update reveal_requests table: set status='revealed' for all pending requests for this answer
+    const { error: requestsError } = await supabase
+      .from('reveal_requests')
+      .update({ status: 'revealed' })
+      .eq('answer_id', answerId)
+      .eq('status', 'pending')
+      .select()
+
+    if (requestsError) {
+      console.error('Failed to update reveal_requests status:', requestsError.message)
+      return
+    }
+
+    // 3. Update local state for UI consistency
+    const { data: profile } = await supabase.auth.getUser()
+    const authorName = profile?.user?.email || 'Author'
+
+    setAnswers(prev =>
+      prev.map(answer =>
+        answer.id === answerId
+          ? { ...answer, reveal_status: true, revealed_at: now, author_name: authorName }
+          : answer
+      )
+    )
   }
+
 
   const topVotedAnswerId = answers.reduce((topId, curr) => {
     const top = answers.find((a) => a.id === topId)
