@@ -20,8 +20,9 @@ export default function TopNav() {
   }
 
   const navBaseClass =
-    'flex justify-between items-center px-6 py-3 border-b border-gray-700 bg-gray-900 shadow-sm max-w-4xl mx-auto'
-  const linkClass = 'text-blue-300 hover:text-white underline transition-colors'
+    'flex justify-between items-center w-full px-6 py-1 border-b border-gray-700 bg-gray-900 shadow-sm'
+  const linkClass =
+    'text-blue-300 hover:text-white underline transition-colors'
   const textClass = 'text-gray-300'
 
   if (!userEmail) {
@@ -45,7 +46,7 @@ export default function TopNav() {
 
   return (
     <nav className={`${navBaseClass} relative`}>
-      {/* Left: Home | Ask | My Questions */}
+      {/* Left Section: Home | Ask | My Questions */}
       <div className="flex space-x-3">
         <button
           onClick={() => {
@@ -69,24 +70,22 @@ export default function TopNav() {
         </Link>
       </div>
 
-      {/* Center: Logged in as... */}
+      {/* Center Section: Logged in as... */}
       <div className="absolute left-1/2 transform -translate-x-1/2 text-sm text-gray-300 whitespace-nowrap">
         ✅ Logged in as{' '}
-        <span className="font-semibold text-white">{userEmail}</span>{' '}
-        
+        <span className="font-semibold text-white">{userEmail}</span>
       </div>
 
-      {/* Right: Notifications */}
-      <div className="flex items-center">
+      {/* Right Section: Notifications and Logout */}
+      <div className="flex items-center space-x-2">
         <NotificationsDropdown />
         <button
           onClick={handleLogout}
-          className="ml-2 underline text-blue-300 hover:text-white"
+          className="underline text-blue-300 hover:text-white text-sm"
         >
           Log out
         </button>
       </div>
     </nav>
   )
-
 }

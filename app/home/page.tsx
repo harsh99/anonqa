@@ -1,10 +1,10 @@
-// app/home/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
+import Leaderboard from '@/components/Leaderboard'
 
 function truncate(str: string, max: number) {
   return str.length <= max ? str : str.slice(0, max) + '…'
@@ -30,6 +30,7 @@ function formatRelativeOrExactTime(utcString: string): string {
 export default function HomeFeed() {
   const [questions, setQuestions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [showLeaderboard, setShowLeaderboard] = useState(false)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -65,53 +66,84 @@ export default function HomeFeed() {
   }
 
   return (
-    <main className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">My Feed</h1>
-      {questions.length === 0 ? (
-        <p className="text-gray-500">No questions yet.</p>
-      ) : (
-        <ul className="space-y-4">
-          {questions.map((q) => (
-            <li key={q.question_id}>
-              <Link href={`/questions/${q.question_id}`}>
-                <div className="p-4 border rounded-xl shadow bg-rose-50 hover:bg-teal-100 transition cursor-pointer">
-                  <p className="text-lg font-medium">
-                    {q.question_content}
-                    <span className="ml-2 text-xs text-gray-500 italic">
-                      • {formatRelativeOrExactTime(q.question_created_at)}
-                    </span>
-                  </p>
-
-                  {q.top_answer_content ? (
-                    <div className="text-sm text-gray-700 mt-2 italic">
-                      “{truncate(q.top_answer_content, 100)}”
-                      {q.answer_created_at && (
-                        <span className="ml-2 text-xs text-gray-500">
-                          • {formatRelativeOrExactTime(q.answer_created_at)}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="mt-2">
-                      <span className="p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 italic text-sm inline-block max-w-xs">
-                        🚫 No answers yet. Be the first one to answer!
+  <>
+    {/* Main Content */}
+    <div className="px-4 md:px-8 lg:px-12 w-full max-w-7xl mx-auto">
+      <main className="py-6 max-w-3xl">
+        <h1 className="text-2xl font-bold mb-4">My Feed</h1>
+        {questions.length === 0 ? (
+          <p className="text-gray-500">No questions yet.</p>
+        ) : (
+          <ul className="space-y-4">
+            {questions.map((q) => (
+              <li key={q.question_id}>
+                <Link href={`/questions/${q.question_id}`}>
+                  <div className="p-4 border rounded-xl shadow bg-rose-50 hover:bg-teal-100 transition cursor-pointer">
+                    <p className="text-lg font-medium">
+                      {q.question_content}
+                      <span className="ml-2 text-xs text-gray-500 italic">
+                        • {formatRelativeOrExactTime(q.question_created_at)}
                       </span>
-                    </div>
-                  )}
+                    </p>
 
-                  <p className="text-sm text-gray-500 mt-1">
-                    {q.answer_count ?? 0} answer{q.answer_count === 1 ? '' : 's'}
-                  </p>
+                    {q.top_answer_content ? (
+                      <div className="text-sm text-gray-700 mt-2 italic">
+                        “{truncate(q.top_answer_content, 100)}”
+                        {q.answer_created_at && (
+                          <span className="ml-2 text-xs text-gray-500">
+                            • {formatRelativeOrExactTime(q.answer_created_at)}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-2">
+                        <span className="p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 italic text-sm inline-block max-w-xs">
+                          🚫 No answers yet. Be the first one to answer!
+                        </span>
+                      </div>
+                    )}
 
-                  <button className="mt-2 text-blue-600 hover:underline">
-                    Read more
-                  </button>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </main>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {q.answer_count ?? 0} answer{q.answer_count === 1 ? '' : 's'}
+                    </p>
+
+                    <button className="mt-2 text-blue-600 hover:underline">
+                      Read more
+                    </button>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+    </div>
+
+    {/* Show Button (when leaderboard is hidden) */}
+    {!showLeaderboard && (
+      <button
+        onClick={() => setShowLeaderboard(true)}
+        className="fixed top-1/2 -right-7 z-50 transform -translate-y-1/2 bg-blue-800 text-white px-2 py-1 rounded-l-lg shadow hover:bg-blue-700 text-medium rotate-90 lg:block hidden"
+      >
+        Leaderboard 📈
+      </button>
+    )}
+
+    {showLeaderboard && (
+      <div className="fixed top-1/2 right-0 transform -translate-y-1/2 z-40 w-72 bg-gray-500 shadow-xl rounded-l-xl border border-gray-200">
+        {/* Hide Button inside the Leaderboard */}
+        <div className="flex justify-end p-2">
+          <button
+            onClick={() => setShowLeaderboard(false)}
+            className="text-xs text-gray-200 hover:text-red-300"
+          >
+            ❌ Hide
+          </button>
+        </div>
+        <Leaderboard />
+      </div>
+    )}
+  </>
   )
+
 }

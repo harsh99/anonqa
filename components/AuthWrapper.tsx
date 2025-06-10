@@ -11,8 +11,11 @@ export default function AuthWrapper({ children }: PropsWithChildren) {
 
   return (
     <SessionContextProvider supabaseClient={supabase}>
+      {/* Full-width TopNav */}
+      <TopNav />
+
+      {/* Page content with width constraint */}
       <div className="max-w-4xl mx-auto">
-        <TopNav />
         <main className="p-4">{children}</main>
       </div>
     </SessionContextProvider>
