@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 interface LeaderboardEntry {
   user_id: string
@@ -21,21 +22,47 @@ export default function Leaderboard() {
   const [data, setData] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const month = getCurrentMonthName()
+  const supabase = createClientComponentClient()
+
+  const fetchLeaderboard = async () => {
+    try {
+      const res = await fetch('/api/leaderboard')
+      const json = await res.json()
+      setData(json)
+    } catch (e) {
+      console.error('Failed to fetch leaderboard', e)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    async function fetchLeaderboard() {
-      try {
-        const res = await fetch('/api/leaderboard')
-        const json = await res.json()
-        setData(json)
-      } catch (e) {
-        console.error('Failed to fetch leaderboard', e)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchLeaderboard()
+
+    const channel = supabase.channel('leaderboard_updates')
+
+    // Listen to new reveal requests
+    channel
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'reveal_requests' },
+        () => fetchLeaderboard()
+      )
+      // Listen to changes in reveal status
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'answers' },
+        (payload) => {
+          if (payload.old?.reveal_status !== payload.new?.reveal_status) {
+            fetchLeaderboard()
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   if (loading) return <div className="p-4">Loading leaderboard...</div>

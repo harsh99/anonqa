@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import UpvoteButton from './UpvoteButton'
 import { RequestRevealButton } from './RequestRevealButton'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { motion } from 'framer-motion'
 
 interface Answer {
   id: string
@@ -159,8 +160,47 @@ export default function AnswerList({ answers: initialAnswers, votedAnswerIds = [
           : answer
       )
     )
+
   }
 
+  //4 code to update answers, reveal_requests table along with UI changes when author wants to hide identity
+  const handleGoAnonymous = async (answerId: string) => {
+    // Step 1: Revert answer status
+    const { error: answerError } = await supabase
+      .from('answers')
+      .update({ reveal_status: false, revealed_at: null })
+      .eq('id', answerId)
+
+    if (answerError) {
+      console.error('Failed to go anonymous in answers:', answerError.message)
+      return
+    }
+
+    // Step 2: Reset reveal_requests to pending
+    const { error: requestsError } = await supabase
+      .from('reveal_requests')
+      .update({ status: 'pending' })
+      .eq('answer_id', answerId)
+
+    if (requestsError) {
+      console.error('Failed to revert reveal_requests status:', requestsError.message)
+      return
+    }
+
+    // Step 3: Update local state
+    setAnswers(prev =>
+      prev.map(answer =>
+        answer.id === answerId
+          ? {
+              ...answer,
+              reveal_status: false,
+              revealed_at: null,
+              author_name: undefined, // So it shows "By Anonymous"
+            }
+          : answer
+      )
+    )
+  }
 
   const topVotedAnswerId = answers.reduce((topId, curr) => {
     const top = answers.find((a) => a.id === topId)
@@ -199,17 +239,41 @@ export default function AnswerList({ answers: initialAnswers, votedAnswerIds = [
                 'By Anonymous'
               )}
             </p>
-            {isAuthor && !answer.reveal_status && (
-              <button
-                onClick={() => handleRevealIdentity(answer.id)}
-                className="text-blue-600 underline text-sm"
+            {isAuthor && !answer.reveal_status && answer.votes_count > 0 && (answer.reveal_request_count ?? 0) > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
               >
-                Reveal My Identity
-                {answer.reveal_request_count !== undefined && answer.reveal_request_count > 0 && (
-                  <> ({answer.reveal_request_count} request{answer.reveal_request_count > 1 ? 's' : ''})</>
-                )}
-              </button>
+                <button
+                  onClick={() => handleRevealIdentity(answer.id)}
+                  className="text-sm bg-teal-300 text-blue-900 px-4 py-1 rounded-full shadow hover:bg-blue-200 transition-all"
+                >
+                  Reveal My Identity
+                  {answer.reveal_request_count > 0 && (
+                    <> ({answer.reveal_request_count} request{answer.reveal_request_count > 1 ? 's' : ''})</>
+                  )}
+                </button>
+              </motion.div>
             )}
+
+            {isAuthor && answer.reveal_status && (
+              <div className="flex justify-end">
+                <motion.div
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, ease: 'easeOut' }}
+                >
+                  <button
+                    onClick={() => handleGoAnonymous(answer.id)}
+                    className="text-sm bg-red-200 text-red-900 px-4 py-1 rounded-full shadow hover:bg-red-200 transition-all"
+                  >
+                    Go Anonymous
+                  </button>
+                </motion.div>
+                </div>
+            )}
+
             {answer.id === topVotedAnswerId && !answer.reveal_status && !isAuthor && (
               <RequestRevealButton
                 answerId={answer.id}
