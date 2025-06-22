@@ -19,7 +19,7 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        redirectTo: `${location.origin}/auth/callback`,
+        emailRedirectTo: `${location.origin}/auth/callback`,
       },
     })
 

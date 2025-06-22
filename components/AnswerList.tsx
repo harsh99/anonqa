@@ -79,13 +79,20 @@ export default function AnswerList({ answers: initialAnswers, votedAnswerIds = [
       }
     )
 
+
+    // Define the expected shape of the payload
+    type RevealRequestRow = {
+      answer_id: string
+      [key: string]: any
+    }
+
     // Listen for any change on reveal_requests table relevant to current answers
     channel.on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'reveal_requests' },
       (payload) => {
-        const newReq = payload.new
-        const oldReq = payload.old
+        const newReq = payload.new as RevealRequestRow
+        const oldReq = payload.old as RevealRequestRow
 
         // Check if change relates to one of the displayed answers
         if (!answerIds.includes(newReq?.answer_id) && !answerIds.includes(oldReq?.answer_id)) {
@@ -250,8 +257,8 @@ export default function AnswerList({ answers: initialAnswers, votedAnswerIds = [
                   className="text-sm bg-teal-300 text-blue-900 px-4 py-1 rounded-full shadow hover:bg-blue-200 transition-all"
                 >
                   Reveal My Identity
-                  {answer.reveal_request_count > 0 && (
-                    <> ({answer.reveal_request_count} request{answer.reveal_request_count > 1 ? 's' : ''})</>
+                  {(answer.reveal_request_count ?? 0) > 0 && (
+                    <> ({answer.reveal_request_count} request{(answer.reveal_request_count ?? 0) > 1 ? 's' : ''})</>
                   )}
                 </button>
               </motion.div>
