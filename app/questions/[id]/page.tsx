@@ -116,7 +116,12 @@ export default async function QuestionPage({ params }: Props) {
   }
 
   // Enrich answers with reveal data and author name using `user` alias
-  const enrichedAnswers = answers.map((answer) => {
+
+  type AnswerWithUser = typeof answers[number] & {
+    user?: { username: string } | null
+  }
+
+  const enrichedAnswers = (answers as AnswerWithUser[]).map((answer) => {
     const voted = answer.user_votes?.some((v) => v.user_id === currentUserId)
     const isTop = topAnswer && answer.id === topAnswer.id
     return {
