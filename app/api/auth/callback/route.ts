@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const supabase = createRouteHandlerClient({ cookies })
 
   // This exchanges the code in the URL for a session and sets the cookie
-  await supabase.auth.exchangeCodeForSession(request)
+  await supabase.auth.exchangeCodeForSession(request.url)
 
   return NextResponse.redirect(new URL('/', request.url))
 }
