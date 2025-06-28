@@ -22,6 +22,26 @@ interface Notification {
   } | null
 }
 
+function normalizeNotifications(raw: any[]): Notification[] {
+  return raw.map((item) => ({
+    id: item.id,
+    user_id: item.user_id,
+    answer_id: item.answer_id,
+    type: item.type,
+    created_at: item.created_at,
+    read: item.read,
+    answers: item.answers
+      ? {
+          id: item.answers.id,
+          question_id: item.answers.question_id,
+          questions: Array.isArray(item.answers.questions)
+            ? item.answers.questions[0] || null
+            : item.answers.questions || null
+        }
+      : null
+  }))
+}
+
 export default function NotificationsDropdown() {
   const supabase = createClientComponentClient()
   const router = useRouter()
@@ -59,7 +79,7 @@ export default function NotificationsDropdown() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setNotifications(data || [])
+      setNotifications(normalizeNotifications(data || []))
     } catch (err: any) {
       setError(err.message || 'Error loading notifications')
     } finally {
