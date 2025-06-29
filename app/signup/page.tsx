@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
@@ -11,6 +11,21 @@ export default function SignupPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
 
+  // ✅ Redirect logged-in users
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) {
+        router.replace('/home');
+      }
+    };
+
+    checkSession();
+  }, [router, supabase]);
+  
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')

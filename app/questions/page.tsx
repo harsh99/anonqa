@@ -3,16 +3,27 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useSession } from '@supabase/auth-helpers-react'
+import { useRouter } from 'next/navigation'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
 dayjs.extend(relativeTime)
 
 export default function QuestionsPage() {
+  const session = useSession()
+  const router = useRouter()
+
   const [questions, setQuestions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (session) {
+      console.log('🔁 Redirecting logged-in user from /questions to /home')
+      router.replace('/home')
+      return
+    }
+
     const fetchData = async () => {
       const { data, error } = await supabase
         .from('questions')
@@ -26,9 +37,8 @@ export default function QuestionsPage() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error(error)
+        console.error('❌ Error fetching questions:', error)
       } else {
-        // Sort answers by created_at desc and pick latest one only
         const questionsWithLatest = (data || []).map((q: any) => ({
           ...q,
           latestAnswer: q.answers?.sort((a: any, b: any) =>
@@ -44,7 +54,7 @@ export default function QuestionsPage() {
     }
 
     fetchData()
-  }, [])
+  }, [session, router])
 
   if (loading) return <div className="p-4">Loading...</div>
 

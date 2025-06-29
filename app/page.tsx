@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import HeroSection from '@/components/HeroSection'
+import { redirect } from 'next/navigation'
 
 export default async function HomePage() {
   const supabase = createClient()
@@ -10,6 +12,10 @@ export default async function HomePage() {
   } = await supabase.auth.getSession()
 
   if (sessionError) console.error('❌ Session error:', sessionError)
+  
+  if (session) {
+    redirect('/home')
+  }
 
   const { data: questions, error } = await supabase
     .from('questions_with_top_answer')
@@ -23,28 +29,7 @@ export default async function HomePage() {
 
   return (
     <main className="p-6 max-w-3xl mx-auto">
-      {/* Hero / Intro */}
-      {!session && (
-        <section className="text-center mb-10">
-          <h1 className="text-3xl font-bold mb-2 text-gray-800">Welcome to <span className="text-orange-600">Doubtmatter.ai</span></h1>
-          <p className="text-gray-700 mb-4 text-base">
-            <ul>
-              Ask questions anonymously. Get answers.
-            </ul>
-            <ul>
-              Request reveals if you want to know who's behind the best ones.
-            </ul>
-            <ul>
-              Feature on leaderboards.
-            </ul>
-          </p>
-          <Link href="/signup">
-            <button className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-4 py-2 rounded shadow">
-              Get Started
-            </button>
-          </Link>
-        </section>
-      )}
+      <HeroSection />
 
       {/* Trending Section with CTA Cards */}
       <section>
