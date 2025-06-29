@@ -98,7 +98,7 @@ export default function NotificationsDropdown() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications' },
         async (payload) => {
-          const newNotif: Notification = payload.new
+          const newNotif = payload.new as any;
 
           if (newNotif.user_id !== userId || newNotif.read) return
 
@@ -124,7 +124,7 @@ export default function NotificationsDropdown() {
             .single()
 
           if (!enrichError && enriched) {
-            setNotifications((prev) => [enriched, ...prev])
+            setNotifications((prev) => [normalizeNotifications([enriched])[0], ...prev])
           }
         }
       )
