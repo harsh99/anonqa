@@ -63,7 +63,7 @@ export default function QuestionsPage() {
 
                   {q.latestAnswer && (
                     <div className="text-sm text-gray-700 mt-2 italic">
-                      “{truncate(q.latestAnswer.content, 100)}”
+                      “{q.latestAnswer.content}”
                       <span className="ml-2 text-xs text-gray-500">
                         • {dayjs(q.latestAnswer.created_at).fromNow()}
                       </span>
