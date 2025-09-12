@@ -78,7 +78,7 @@ export default function HomeFeed() {
             {questions.map((q) => (
               <li key={q.question_id}>
                 <Link href={`/questions/${q.question_id}`}>
-                  <div className="p-4 border rounded-xl shadow bg-rose-50 hover:bg-teal-100 transition cursor-pointer">
+                  <div className="p-4 border rounded-xl shadow bg-gray-50 hover:bg-teal-100 transition cursor-pointer">
                     <p className="text-lg font-medium">
                       {q.question_content}
                       <span className="ml-2 text-xs text-gray-500 italic">
