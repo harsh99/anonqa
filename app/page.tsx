@@ -55,6 +55,18 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Entry point for the Akamai Account Protector test login endpoint. */}
+      <section className="mt-8 text-center">
+        <Link href="/logmein">
+          <button className="bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded">
+            Go to /logmein
+          </button>
+        </Link>
+        <p className="mt-2 text-xs text-gray-500">
+          Test login form — accepts test credentials only, not real accounts.
+        </p>
+      </section>
     </main>
   )
 }
