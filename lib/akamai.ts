@@ -30,7 +30,11 @@ export function collectAkamaiHeaders(headers: IterableHeaders): HeaderPair[] {
 
   headers.forEach((value, name) => {
     const key = name.toLowerCase()
-    if (AKAMAI_PREFIXES.some((p) => key.startsWith(p)) || AKAMAI_EXTRAS.has(key)) {
+    const matches =
+      AKAMAI_PREFIXES.some((p) => key.startsWith(p)) ||
+      AKAMAI_EXTRAS.has(key) ||
+      key.includes('bot') // e.g. a custom-named Bot Manager header
+    if (matches) {
       found.push({ name: key, value })
     }
   })
@@ -39,11 +43,12 @@ export function collectAkamaiHeaders(headers: IterableHeaders): HeaderPair[] {
 }
 
 /**
- * `Akamai-User-Risk` arrives as a flat `key=value;key=value` string, e.g.
- *   score=68;risk=udfp:1abcd/ucrs:1/uip:2;trust=ugp:t;general=aci:1;allow=0;action=monitor
- * Split it so the test page can render it as a table instead of one long line.
+ * Both `Akamai-User-Risk` and `Akamai-Bot` arrive as a flat `key=value;...`
+ * string, e.g.
+ *   score=68;risk=udfp:1abcd/ucrs:1/uip:2;trust=ugp:t;allow=0;action=monitor
+ * Split it so a page can render it as a table instead of one long line.
  */
-export function parseUserRisk(raw: string | null): HeaderPair[] | null {
+export function parseKeyValueHeader(raw: string | null): HeaderPair[] | null {
   if (!raw) return null
 
   const parts = raw
@@ -59,3 +64,10 @@ export function parseUserRisk(raw: string | null): HeaderPair[] | null {
 
   return parts.length > 0 ? parts : null
 }
+
+// Account Protector's per-request assessment.
+export const parseUserRisk = parseKeyValueHeader
+
+// Bot Manager's classification of the request: bot type, Botnet ID, action,
+// detection method, and score details.
+export const parseAkamaiBot = parseKeyValueHeader
