@@ -21,6 +21,13 @@ export async function middleware(req: NextRequest) {
   console.log('🧠 Supabase session in middleware:', session)
   if (error) console.error('❌ Supabase error:', error)
 
+  // Test cookie on the base page only. Not httpOnly, so it's visible in
+  // document.cookie and in the Set-Cookie response header.
+  if (req.nextUrl.pathname === '/') {
+    res.cookies.set('test_cookie', 'maciek', { path: '/' })
+    res.cookies.set('second_cookie', 'harsh', { path: '/' })
+  }
+
   return res
 }
 
