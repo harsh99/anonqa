@@ -56,16 +56,29 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Entry point for the Akamai Account Protector test login endpoint. */}
-      <section className="mt-8 text-center">
-        <Link href="/logmein">
-          <button className="bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded">
-            Go to /logmein
-          </button>
-        </Link>
-        <p className="mt-2 text-xs text-gray-500">
-          Test login form — accepts test credentials only, not real accounts.
-        </p>
+      {/* Entry points for the Akamai lab test endpoints. */}
+      <section className="mt-8 text-center space-y-4">
+        <div>
+          <Link href="/logmein">
+            <button className="bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded">
+              Go to /logmein
+            </button>
+          </Link>
+          <p className="mt-2 text-xs text-gray-500">
+            Test login form — accepts test credentials only, not real accounts.
+          </p>
+        </div>
+
+        <div>
+          <Link href="/upload">
+            <button className="bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded">
+              Go to /upload
+            </button>
+          </Link>
+          <p className="mt-2 text-xs text-gray-500">
+            File upload test — for Akamai Malware Protection. Nothing is stored.
+          </p>
+        </div>
       </section>
     </main>
   )

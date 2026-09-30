@@ -175,3 +175,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Local upload test files for Akamai Malware Protection lab (never commit)
+clean-upload-test.txt
+eicar*
+*.eicar
